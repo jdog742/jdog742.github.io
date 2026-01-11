@@ -1,0 +1,100 @@
+* {
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+  }
+  
+  body {
+    margin: 0;
+    background: #121212;
+    color: #ffffff;
+  }
+  
+  header {
+    padding: 16px;
+    text-align: center;
+    background: #1e1e1e;
+    border-bottom: 1px solid #333;
+  }
+  
+  main {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 16px;
+  }
+  
+  h1, h2, h3 {
+    margin-top: 0;
+  }
+  
+  .screen {
+    display: none;
+  }
+  
+  .screen.active {
+    display: block;
+  }
+  
+  button {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    font-size: 16px;
+    background: #2a2a2a;
+    color: #fff;
+    border: 1px solid #444;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  
+  button:hover {
+    background: #333;
+  }
+  
+  button.primary {
+    background: #5c7cfa;
+    border: none;
+  }
+  
+  button.primary:hover {
+    background: #4c6ef5;
+  }
+  
+  .player-list {
+    list-style: none;
+    padding: 0;
+    margin: 16px 0;
+  }
+  
+  .player-list li {
+    padding: 8px;
+    background: #1e1e1e;
+    margin-bottom: 6px;
+    border-radius: 4px;
+  }
+  
+  .card {
+    background: #1e1e1e;
+    padding: 16px;
+    border-radius: 8px;
+    margin: 16px 0;
+    text-align: center;
+  }
+  
+  .timer {
+    text-align: center;
+    font-size: 24px;
+    margin-bottom: 16px;
+  }
+  
+  .chat-box {
+    background: #1e1e1e;
+    padding: 12px;
+    border-radius: 6px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  
+  .vote-list button {
+    margin-bottom: 8px;
+  }
+  

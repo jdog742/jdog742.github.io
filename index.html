@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>One Night Ultimate Werewolf</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header>
+    <h1>One Night Ultimate Werewolf</h1>
+  </header>
+
+  <main>
+
+    <!-- HOME -->
+    <section id="screen-home" class="screen active">
+      <button>Create Room</button>
+      <button>Join Room</button>
+    </section>
+
+    <!-- LOBBY -->
+    <section id="screen-lobby" class="screen">
+      <h2>Lobby</h2>
+
+      <ul class="player-list">
+        <li>Alice</li>
+        <li>Bob</li>
+        <li>Charlie</li>
+      </ul>
+
+      <button>Ready</button>
+      <button class="primary">Start Game</button>
+    </section>
+
+    <!-- NIGHT -->
+    <section id="screen-night" class="screen">
+      <h2>Night Phase</h2>
+
+      <div class="card">
+        <h3>Your Role</h3>
+        <p>Seer</p>
+      </div>
+
+      <button class="primary">Submit Action</button>
+    </section>
+
+    <!-- DISCUSSION -->
+    <section id="screen-discussion" class="screen">
+      <h2>Discussion</h2>
+      <p class="timer">02:00</p>
+
+      <div class="chat-box">
+        <p><strong>Alice:</strong> I saw Bob.</p>
+        <p><strong>Bob:</strong> I am not a werewolf.</p>
+      </div>
+    </section>
+
+    <!-- VOTING -->
+    <section id="screen-voting" class="screen">
+      <h2>Vote</h2>
+
+      <div class="vote-list">
+        <button>Alice</button>
+        <button>Bob</button>
+        <button>Charlie</button>
+      </div>
+    </section>
+
+    <!-- REVEAL -->
+    <section id="screen-reveal" class="screen">
+      <h2>Results</h2>
+      <p>Bob was a Werewolf 🐺</p>
+
+      <button class="primary">Play Again</button>
+    </section>
+
+  </main>
+
+</body>
+</html>
