@@ -16,8 +16,8 @@
 
     <!-- HOME -->
     <section id="screen-home" class="screen active">
-      <button>Create Room</button>
-      <button>Join Room</button>
+        <button data-next="screen-lobby">Create Room</button>
+        <button data-next="screen-lobby">Join Room</button>        
     </section>
 
     <!-- LOBBY -->
@@ -30,9 +30,11 @@
         <li>Charlie</li>
       </ul>
 
+      <button>Roles</button>
       <button>Ready</button>
-      <button class="primary">Start Game</button>
+      <button class="primary" data-next="screen-night">Start Game</button>
     </section>
+
 
     <!-- NIGHT -->
     <section id="screen-night" class="screen">
@@ -43,7 +45,7 @@
         <p>Seer</p>
       </div>
 
-      <button class="primary">Submit Action</button>
+      <button class="primary" data-next="screen-discussion">Submit Action</button>
     </section>
 
     <!-- DISCUSSION -->
@@ -51,10 +53,13 @@
       <h2>Discussion</h2>
       <p class="timer">02:00</p>
 
+
       <div class="chat-box">
         <p><strong>Alice:</strong> I saw Bob.</p>
         <p><strong>Bob:</strong> I am not a werewolf.</p>
       </div>
+
+      <button class="primary" data-next="screen-voting">Start Voting</button>
     </section>
 
     <!-- VOTING -->
@@ -62,9 +67,9 @@
       <h2>Vote</h2>
 
       <div class="vote-list">
-        <button>Alice</button>
-        <button>Bob</button>
-        <button>Charlie</button>
+        <button data-next="screen-reveal">Alice</button>
+        <button data-next="screen-reveal">Bob</button>
+        <button data-next="screen-reveal">Charlie</button>
       </div>
     </section>
 
@@ -73,7 +78,7 @@
       <h2>Results</h2>
       <p>Bob was a Werewolf 🐺</p>
 
-      <button class="primary">Play Again</button>
+      <button class="primary" data-next="screen-home">Play Again</button>
     </section>
 
   </main>
