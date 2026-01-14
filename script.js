@@ -12,6 +12,7 @@ function showScreen(id) {
         target.classList.add("active");
   }
   
+  //Test
   // Wait for the page to load before wiring up buttons
 document.addEventListener("DOMContentLoaded", () => {
     
