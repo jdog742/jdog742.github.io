@@ -79,6 +79,18 @@
     margin: 16px 0;
     text-align: center;
   }
+
+  .role img {
+    cursor: pointer;
+    transition: filter 0.25s ease, transform 0.2s ease;
+  }
+  
+  /* DARKER when selected */
+  .role input:checked + img {
+    filter: brightness(50%) contrast(110%);
+    transform: scale(0.97);
+  }
+  
   
   .timer {
     text-align: center;

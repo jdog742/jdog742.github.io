@@ -21,8 +21,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const nextScreen = target.dataset.next;
         showScreen(nextScreen);
-    })
+    });
+
+    const numberOfPlayers = document.querySelectorAll(".player-list li").length;
+    let numberOfRoles = numberOfPlayers + 3;
+
+    const textElement = document.getElementById("numberofroles");
+  
+    if (textElement) {
+      textElement.textContent = "Select " + numberOfRoles + " roles";
+    } else {
+      console.warn('No element found with id="numberofroles"');
+    }
+
 });
+
+
+
+
+
+
     
     
 

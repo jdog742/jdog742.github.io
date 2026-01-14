@@ -30,9 +30,69 @@
         <li>Charlie</li>
       </ul>
 
-      <button>Roles</button>
+      <p id="numberofroles"></p>
+
+      <button data-next="screen-roles">Roles</button>
       <button>Ready</button>
       <button class="primary" data-next="screen-night">Start Game</button>
+    </section>
+
+    <!-- Roles -->
+    <section id="screen-roles" class="screen">
+        <h2>Roles</h2>
+
+        <label class="role">
+            <input type="checkbox" name="roles[]" value="Drunk" hidden>
+            <img src="Drunk.webp" alt="Role icon">
+        </label>
+
+        <label class="role">
+            <input type="checkbox" name="roles[]" value="Insomniac" hidden>
+            <img src="Insomniac.webp" alt="Role icon">
+        </label>
+
+        <label class="role">
+            <input type="checkbox" name="roles[]" value="Mason" hidden>
+            <img src="Mason.webp" alt="Role icon">
+        </label>
+
+        <label class="role">
+            <input type="checkbox" name="roles[]" value="Minion" hidden>
+            <img src="Minion.webp" alt="Role icon">
+        </label>
+
+        <label class="role">
+            <input type="checkbox" name="roles[]" value="Robber" hidden>
+            <img src="Robber.webp" alt="Role icon">
+        </label>
+
+        <label class="role">
+            <input type="checkbox" name="roles[]" value="Seer" hidden>
+            <img src="Seer-0.webp" alt="Role icon">
+        </label>
+
+        <label class="role">
+            <input type="checkbox" name="roles[]" value="Tanner" hidden>
+            <img src="Tanner.webp" alt="Role icon">
+        </label>
+
+        <label class="role">
+            <input type="checkbox" name="roles[]" value="Troublemaker" hidden>
+            <img src="Troublemaker.webp" alt="Role icon">
+        </label>
+
+        <label class="role">
+            <input type="checkbox" name="roles[]" value="villager" hidden>
+            <img src="Villager.webp" alt="Role icon">
+        </label>
+
+        <label class="role">
+            <input type="checkbox" name="roles[]" value="Werewolf" hidden>
+            <img src="Werewolf.webp" alt="Role icon">
+        </label>
+
+        <button class="primary" data-next="screen-lobby">Back</button>
+
     </section>
 
 
