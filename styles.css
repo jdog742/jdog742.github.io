@@ -81,6 +81,8 @@
   }
 
   .role img {
+    width: 90px;
+    height: auto;
     cursor: pointer;
     transition: filter 0.25s ease, transform 0.2s ease;
   }
