@@ -3,7 +3,7 @@
 let gameState = null;
 let currentPlayer = "Alice";
 
-let selectedTableShape = localStorage.getItem("tableShape") || "oval";
+let selectedTableShape = "rectangle";
 
 let savedTableLayout = null;
 
@@ -18,26 +18,145 @@ let editingTableLayout = null;
 
 let tableSettings = loadTableSettings();
 
+const TABLE_GRID_SIZE = 5; // percent grid size
+
+const DOUBLE_CLICK_DELAY = 350;
+const DRAG_START_DISTANCE = 6;
+
+let lastLayoutCardClick = {
+  player: null,
+  time: 0
+};
+
+const TABLE_ZOOM_OPTIONS = {
+  maxScale: 3,
+  minScale: 1,
+  initScale: 1,
+  bounds: true,
+  draggable: true,
+  wheelable: true,
+  pinchable: true,
+  smooth: true,
+  zoomer: true,
+  slider: true,
+  wheelReleaseOnMinMax: true,
+  disableDraggingClass: "zoomist-not-draggable"
+};
+
+function initOrUpdateTableZoom(selector) {
+  const container = document.querySelector(selector);
+
+  if (!container) return null;
+
+  if (typeof Zoomist === "undefined") {
+    console.warn("Zoomist is not loaded.");
+    return null;
+  }
+
+  if (container.zoomist) {
+    container.zoomist.update();
+    return container.zoomist;
+  }
+
+  return new Zoomist(container, TABLE_ZOOM_OPTIONS);
+}
+
+function updateTableZoom(selector) {
+  const zoomist = document.querySelector(selector)?.zoomist;
+
+  if (zoomist) {
+    zoomist.update();
+  }
+}
+
+function registerLayoutCardClick(player, button) {
+  const now = Date.now();
+
+  const isDoubleClick =
+    lastLayoutCardClick.player === player &&
+    now - lastLayoutCardClick.time <= DOUBLE_CLICK_DELAY;
+
+  if (isDoubleClick) {
+    rotateCard90(player, button);
+
+    lastLayoutCardClick = {
+      player: null,
+      time: 0
+    };
+
+    return;
+  }
+
+  lastLayoutCardClick = {
+    player,
+    time: now
+  };
+}
+
 function loadTableSettings() {
   try {
     const saved = JSON.parse(localStorage.getItem("tableSettings") || "{}");
 
     return {
-      width: typeof saved.width === "number" ? saved.width : 100,
-      height: typeof saved.height === "number" ? saved.height : 420
+      width: typeof saved.width === "number" ? saved.width : 700,
+      height: typeof saved.height === "number" ? saved.height : 360
     };
   } catch {
     return {
-      width: 100,
-      height: 420
+      width: 460,
+      height: 360
     };
   }
 }
 
+function snapToGrid(value) {
+  return Math.round(value / TABLE_GRID_SIZE) * TABLE_GRID_SIZE;
+}
+
+function getSnappedPointerPosition(event, board) {
+  const rect = board.getBoundingClientRect();
+
+  const rawX = ((event.clientX - rect.left) / rect.width) * 100;
+  const rawY = ((event.clientY - rect.top) / rect.height) * 100;
+
+  return {
+    x: clamp(snapToGrid(rawX), 5, 95),
+    y: clamp(snapToGrid(rawY), 5, 95)
+  };
+}
+
+function getCardRotation(position) {
+  if (typeof position?.rotation !== "number") {
+    return 0;
+  }
+
+  return position.rotation;
+}
+
+function rotateCard90(player, card) {
+  if (!editingTableLayout || !editingTableLayout[player]) return;
+
+  const currentRotation = getCardRotation(editingTableLayout[player]);
+  const nextRotation = currentRotation + 90;
+
+  editingTableLayout[player] = {
+    ...editingTableLayout[player],
+    rotation: nextRotation
+  };
+
+  applyCardRotation(card, nextRotation);
+}
+
+function applyCardRotation(card, rotation) {
+  card.style.setProperty("--card-rotation", rotation + "deg");
+}
+
+
 function applyTableSettings(board) {
   if (!board) return;
 
-  board.style.width = tableSettings.width + "%";
+  board.style.width = tableSettings.width + "px";
+  board.style.minWidth = tableSettings.width + "px";
   board.style.height = tableSettings.height + "px";
 }
 
@@ -54,30 +173,29 @@ function updateTableSizeControls() {
   if (widthInput) widthInput.value = tableSettings.width;
   if (heightInput) heightInput.value = tableSettings.height;
 
-  if (widthValue) widthValue.textContent = tableSettings.width + "%";
+  if (widthValue) widthValue.textContent = tableSettings.width + "px";
   if (heightValue) heightValue.textContent = tableSettings.height + "px";
 }
 
 function showScreen(id) {
-    // Hide all screens
-    document.querySelectorAll(".screen").forEach((screen) => {
-      screen.classList.remove("active");
-    });
-  
-    // Show the requested screen
-    const target = document.getElementById(id);
-    if (target) 
-        target.classList.add("active");
+  document.querySelectorAll(".screen").forEach((screen) => {
+    screen.classList.remove("active");
+  });
+
+  const target = document.getElementById(id);
+
+  if (target) {
+    target.classList.add("active");
+  }
 }
-  
-  //Test
-  // Wait for the page to load before wiring up buttons
+
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll('input[name="roles"]').forEach((role) => {
     role.checked = false;
   });
+
   const numberOfPlayers = document.querySelectorAll(".player-list li").length;
-  let numberOfRoles = numberOfPlayers + 3;
+  const numberOfRoles = numberOfPlayers + 3;
 
   const textElement = document.getElementById("numberofroles");
 
@@ -96,12 +214,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (nextScreen === "screen-table-layout") {
       renderLayoutEditor();
     }
-    
+
     if (target.id === "saveTableLayout") {
-      saveTableLayout();
+      saveCurrentTableLayout();
     }
 
-    // Only check selected roles when Start Game is clicked
     if (target.id === "startGame") {
       const selectedRoles = document.querySelectorAll(
         'input[name="roles"]:checked'
@@ -110,34 +227,38 @@ document.addEventListener("DOMContentLoaded", () => {
       if (selectedRoles !== numberOfRoles) {
         alert(
           "You need to select exactly " +
-          numberOfRoles +
-          " roles. You selected " +
-          selectedRoles +
-          "."
+            numberOfRoles +
+            " roles. You selected " +
+            selectedRoles +
+            "."
         );
 
         return;
-
-
-
       }
-      
+
       gameState = dealCards();
 
       console.log("Game state:", gameState);
+
       showYourRole();
       renderTableLayout();
     }
 
     showScreen(nextScreen);
+
+    requestAnimationFrame(() => {
+      if (nextScreen === "screen-table-layout") {
+        initOrUpdateTableZoom("#layoutTableZoom");
+      }
+    });
   });
 
   document.addEventListener("click", (event) => {
     const cardButton = event.target.closest(".table-card");
     if (!cardButton) return;
-  
+
     const slot = cardButton.dataset.slot;
-  
+
     if (slot) {
       console.log("Clicked card slot:", slot);
     }
@@ -145,21 +266,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const shapeSelect = document.getElementById("tableShape");
 
-  if (shapeSelect) {
-    shapeSelect.value = selectedTableShape;
-
-    shapeSelect.addEventListener("change", () => {
-      selectedTableShape = shapeSelect.value;
-
-      const board = document.getElementById("layoutEditorBoard");
-      setBoardShape(board, selectedTableShape);
-
-      const players = getPlayersFromLobby();
-      editingTableLayout = getGeneratedPositionMap(players, selectedTableShape);
-
-      drawLayoutEditorPlayers();
-    });
-  }
 
   const resetLayoutButton = document.getElementById("resetTableLayout");
 
@@ -175,8 +281,10 @@ document.addEventListener("DOMContentLoaded", () => {
       tableSettings.width = Number(tableWidthInput.value);
 
       const board = document.getElementById("layoutEditorBoard");
+
       applyTableSettings(board);
       updateTableSizeControls();
+      requestAnimationFrame(() => updateTableZoom("#layoutTableZoom"));
     });
   }
 
@@ -185,8 +293,10 @@ document.addEventListener("DOMContentLoaded", () => {
       tableSettings.height = Number(tableHeightInput.value);
 
       const board = document.getElementById("layoutEditorBoard");
+
       applyTableSettings(board);
       updateTableSizeControls();
+      requestAnimationFrame(() => updateTableZoom("#layoutTableZoom"));
     });
   }
 });
@@ -200,7 +310,6 @@ function dealCards() {
     document.querySelectorAll('input[name="roles"]:checked')
   ).map((role) => role.value);
 
-  // Shuffle selected roles
   const shuffledRoles = [...selectedRoles];
 
   for (let i = shuffledRoles.length - 1; i > 0; i--) {
@@ -225,7 +334,6 @@ function dealCards() {
     privateResults[player] = [];
   });
 
-  // Remaining 3 cards go in the middle
   cardSlots.center1 = shuffledRoles[players.length];
   cardSlots.center2 = shuffledRoles[players.length + 1];
   cardSlots.center3 = shuffledRoles[players.length + 2];
@@ -257,6 +365,7 @@ function showYourRole() {
 
 function swapCards(slotA, slotB) {
   const temp = gameState.cardSlots[slotA];
+
   gameState.cardSlots[slotA] = gameState.cardSlots[slotB];
   gameState.cardSlots[slotB] = temp;
 }
@@ -279,6 +388,7 @@ function renderTableLayout() {
     const position = positionMap[player];
 
     const button = document.createElement("button");
+
     button.classList.add("table-card", "player-card-slot");
     button.dataset.slot = player;
 
@@ -290,21 +400,14 @@ function renderTableLayout() {
       <img src="CardBack.jpg" alt="${player}'s face-down card">
     `;
 
+    applyCardRotation(button, getCardRotation(position));
+
     layout.appendChild(button);
   });
 }
 
-
 function getGeneratedTablePositions(playerCount, shape = "oval") {
-  if (shape === "rectangle") {
-    return getRectanglePositions(playerCount);
-  }
-
-  if (shape === "horseshoe") {
-    return getHorseshoePositions(playerCount);
-  }
-
-  return getOvalPositions(playerCount);
+  return getRectanglePositions(playerCount);
 }
 
 function getOvalPositions(playerCount) {
@@ -320,7 +423,8 @@ function getOvalPositions(playerCount) {
 
     positions.push({
       x: centerX + radiusX * Math.cos(angle),
-      y: centerY + radiusY * Math.sin(angle)
+      y: centerY + radiusY * Math.sin(angle),
+      rotation: 0
     });
   }
 
@@ -330,44 +434,100 @@ function getOvalPositions(playerCount) {
 function getRectanglePositions(playerCount) {
   const positions = [];
 
-  const minX = 12;
-  const maxX = 88;
-  const minY = 12;
-  const maxY = 88;
+  const leftX = 12;
+  const rightX = 88;
+  const topY = 14;
+  const bottomY = 86;
 
-  const width = maxX - minX;
-  const height = maxY - minY;
-  const perimeter = 2 * (width + height);
+  const base = Math.floor(playerCount / 4);
+  const remainder = playerCount % 4;
 
-  for (let i = 0; i < playerCount; i++) {
-    let distance = ((i * perimeter) / playerCount + width / 2) % perimeter;
+  let topCount = base;
+  let rightCount = base;
+  let bottomCount = base;
+  let leftCount = base;
 
-    let x;
-    let y;
+  // Extra players are added in a way that matches your screenshot better.
+  if (remainder >= 1) bottomCount++;
+  if (remainder >= 2) rightCount++;
+  if (remainder >= 3) topCount++;
 
-    if (distance < width) {
-      x = minX + distance;
-      y = minY;
-    } else if (distance < width + height) {
-      x = maxX;
-      y = minY + (distance - width);
-    } else if (distance < width * 2 + height) {
-      x = maxX - (distance - width - height);
-      y = maxY;
-    } else {
-      x = minX;
-      y = maxY - (distance - width * 2 - height);
-    }
-
-    positions.push({ x, y });
+  // Make sure very small games still show sensibly.
+  if (playerCount === 1) {
+    return [{ x: 50, y: topY, rotation: 0 }];
   }
+
+  if (playerCount === 2) {
+    return [
+      { x: 40, y: topY, rotation: 0 },
+      { x: 60, y: topY, rotation: 0 }
+    ];
+  }
+
+  function addTop(count) {
+    for (let i = 0; i < count; i++) {
+      const t = (i + 1) / (count + 1);
+
+      positions.push({
+        x: leftX + (rightX - leftX) * t,
+        y: topY,
+        rotation: 0
+      });
+    }
+  }
+
+  function addRight(count) {
+    for (let i = 0; i < count; i++) {
+      const t = (i + 1) / (count + 1);
+
+      positions.push({
+        x: rightX,
+        y: topY + (bottomY - topY) * t,
+        rotation: 90
+      });
+    }
+  }
+
+  function addBottom(count) {
+    for (let i = 0; i < count; i++) {
+      const t = (i + 1) / (count + 1);
+
+      positions.push({
+        x: rightX - (rightX - leftX) * t,
+        y: bottomY,
+        rotation: 0
+      });
+    }
+  }
+
+  function addLeft(count) {
+    for (let i = 0; i < count; i++) {
+      const t = (i + 1) / (count + 1);
+
+      positions.push({
+        x: leftX,
+        y: bottomY - (bottomY - topY) * t,
+        rotation: 90
+      });
+    }
+  }
+
+  addTop(topCount);
+  addRight(rightCount);
+  addBottom(bottomCount);
+  addLeft(leftCount);
 
   return positions;
 }
-
 function getHorseshoePositions(playerCount) {
   if (playerCount === 1) {
-    return [{ x: 50, y: 88 }];
+    return [
+      {
+        x: 50,
+        y: 88,
+        rotation: 0
+      }
+    ];
   }
 
   const positions = [];
@@ -399,12 +559,15 @@ function getHorseshoePositions(playerCount) {
       y = minY + (distance - height - width);
     }
 
-    positions.push({ x, y });
+    positions.push({
+      x,
+      y,
+      rotation: 0
+    });
   }
 
   return positions;
 }
-
 
 function getPlayersFromLobby() {
   return Array.from(document.querySelectorAll(".player-list li")).map((player) =>
@@ -442,40 +605,44 @@ function getCurrentPositionMap(players) {
   }
 
   players.forEach((player) => {
+    const savedPosition = savedTableLayout[player];
+
     if (
-      savedTableLayout[player] &&
-      typeof savedTableLayout[player].x === "number" &&
-      typeof savedTableLayout[player].y === "number"
+      savedPosition &&
+      typeof savedPosition.x === "number" &&
+      typeof savedPosition.y === "number"
     ) {
-      generatedMap[player] = savedTableLayout[player];
+      generatedMap[player] = {
+        x: savedPosition.x,
+        y: savedPosition.y,
+        rotation: getCardRotation(savedPosition)
+      };
     }
   });
 
   return generatedMap;
 }
-    
 
 function renderLayoutEditor() {
   const board = document.getElementById("layoutEditorBoard");
   const playerLayer = document.getElementById("layoutEditorPlayers");
-  const shapeSelect = document.getElementById("tableShape");
 
-  if (!board || !playerLayer || !shapeSelect) return;
+  if (!board || !playerLayer) return;
 
-  shapeSelect.value = selectedTableShape;
   setBoardShape(board, selectedTableShape);
   applyTableSettings(board);
   updateTableSizeControls();
 
   const players = getPlayersFromLobby();
 
-  editingTableLayout = getCurrentPositionMap(players);
+  editingTableLayout = structuredCloneSafe(getCurrentPositionMap(players));
 
   drawLayoutEditorPlayers();
 }
 
 function drawLayoutEditorPlayers() {
   const playerLayer = document.getElementById("layoutEditorPlayers");
+
   if (!playerLayer || !editingTableLayout) return;
 
   playerLayer.innerHTML = "";
@@ -486,17 +653,20 @@ function drawLayoutEditorPlayers() {
     const position = editingTableLayout[player];
 
     const button = document.createElement("button");
+
     button.type = "button";
-    button.classList.add("layout-player-token");
+    button.classList.add("layout-player-token", "zoomist-not-draggable");
     button.dataset.slot = player;
 
     button.style.left = position.x + "%";
     button.style.top = position.y + "%";
 
     button.innerHTML = `
-      <span>${player}</span>
-      <img src="CardBack.jpg" alt="${player}'s face-down card">
+      <span class="zoomist-not-draggable">${player}</span>
+      <img class="zoomist-not-draggable" src="CardBack.jpg" alt="${player}'s face-down card">
     `;
+
+    applyCardRotation(button, getCardRotation(position));
 
     enablePlayerDragging(button, player);
 
@@ -506,40 +676,57 @@ function drawLayoutEditorPlayers() {
 
 function enablePlayerDragging(button, player) {
   const board = document.getElementById("layoutEditorBoard");
+
   if (!board) return;
 
   button.addEventListener("pointerdown", (event) => {
     event.preventDefault();
 
+    const startX = event.clientX;
+    const startY = event.clientY;
+
+    let hasDragged = false;
+
     button.classList.add("dragging");
     button.setPointerCapture(event.pointerId);
 
     function movePlayer(moveEvent) {
-      const rect = board.getBoundingClientRect();
+      const moveX = moveEvent.clientX - startX;
+      const moveY = moveEvent.clientY - startY;
+      const distanceMoved = Math.hypot(moveX, moveY);
 
-      const x = clamp(
-        ((moveEvent.clientX - rect.left) / rect.width) * 100,
-        5,
-        95
-      );
+      if (distanceMoved >= DRAG_START_DISTANCE) {
+        hasDragged = true;
+      }
 
-      const y = clamp(
-        ((moveEvent.clientY - rect.top) / rect.height) * 100,
-        5,
-        95
-      );
+      if (!hasDragged) return;
 
-      editingTableLayout[player] = { x, y };
+      const position = getSnappedPointerPosition(moveEvent, board);
 
-      button.style.left = x + "%";
-      button.style.top = y + "%";
+      editingTableLayout[player] = {
+        ...editingTableLayout[player],
+        x: position.x,
+        y: position.y
+      };
+
+      button.style.left = position.x + "%";
+      button.style.top = position.y + "%";
     }
 
-    function stopDragging() {
+    function stopDragging(upEvent) {
       button.classList.remove("dragging");
+
+      if (button.hasPointerCapture(upEvent.pointerId)) {
+        button.releasePointerCapture(upEvent.pointerId);
+      }
+
       button.removeEventListener("pointermove", movePlayer);
       button.removeEventListener("pointerup", stopDragging);
       button.removeEventListener("pointercancel", stopDragging);
+
+      if (!hasDragged) {
+        registerLayoutCardClick(player, button);
+      }
     }
 
     button.addEventListener("pointermove", movePlayer);
@@ -548,13 +735,12 @@ function enablePlayerDragging(button, player) {
   });
 }
 
-function saveTableLayout() {
+function saveCurrentTableLayout() {
   if (!editingTableLayout) return;
 
-  savedTableLayout = editingTableLayout;
+  savedTableLayout = structuredCloneSafe(editingTableLayout);
 
   localStorage.setItem("tableLayout", JSON.stringify(savedTableLayout));
-  localStorage.setItem("tableShape", selectedTableShape);
   saveTableSettings();
 }
 
@@ -567,4 +753,12 @@ function resetTableLayout() {
   editingTableLayout = getGeneratedPositionMap(players, selectedTableShape);
 
   drawLayoutEditorPlayers();
+}
+
+function structuredCloneSafe(value) {
+  if (typeof structuredClone === "function") {
+    return structuredClone(value);
+  }
+
+  return JSON.parse(JSON.stringify(value));
 }

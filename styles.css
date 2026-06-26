@@ -249,20 +249,6 @@
     background: #5c7cfa;
     z-index: 10;
   }
-  
-  .table-board.shape-oval {
-    border-radius: 50%;
-  }
-  
-  .table-board.shape-rectangle {
-    border-radius: 18px;
-  }
-  
-  .table-board.shape-horseshoe {
-    border-radius: 24px 24px 80px 80px;
-    border-bottom-color: transparent;
-  }
-
 
   .table-size-controls {
     background: #1e1e1e;
@@ -344,3 +330,211 @@
     border-radius: 24px 24px 90px 90px;
     border-bottom-color: transparent;
   }
+
+  .layout-editor-board {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+    background-size: 5% 5%;
+  }
+  
+  .player-card-slot,
+  .layout-player-token {
+    --card-rotation: 0deg;
+    transform: translate(-50%, -50%) rotate(var(--card-rotation));
+    transform-origin: center center;
+    transition: transform 0.2s ease;
+  }
+  
+  .player-card-slot.orientation-landscape,
+  .layout-player-token.orientation-landscape {
+    --card-rotation: 90deg;
+  }
+  
+  .table-card:hover img,
+  .layout-player-token:hover img {
+    transform: scale(1.05);
+  }
+
+  .table-viewport {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+  
+    border-radius: 18px;
+    margin: 16px auto;
+    border: 1px solid #333;
+    background: #101010;
+  }
+  
+  /* Desktop/tablet mouse behavior:
+     vertical wheel scrolls the whole page */
+  .table-viewport {
+    height: auto;
+  }
+  
+  /* Mobile behavior:
+     table becomes a movable viewport */
+  @media (pointer: coarse) {
+    .table-viewport {
+      height: 70vh;
+      max-height: 620px;
+      overflow: auto;
+      overscroll-behavior: contain;
+    }
+  }
+  
+  .table-board {
+    width: 460px;
+    min-width: 460px;
+    height: 360px;
+    margin: 0;
+    max-width: none;
+  }
+  
+  .layout-editor-board {
+    touch-action: pan-x pan-y;
+  }
+  
+  .layout-player-token {
+    touch-action: none;
+  }
+
+  .player-card-slot,
+.layout-player-token {
+  --card-rotation: 0deg;
+  --card-scale: 1;
+
+  transform: translate(-50%, -50%) rotate(var(--card-rotation)) scale(var(--card-scale));
+  transform-origin: center center;
+  transition: transform 0.2s ease;
+}
+
+.center-card {
+  --card-scale: 1;
+
+  transform: scale(var(--card-scale));
+  transform-origin: center center;
+  transition: transform 0.2s ease;
+}
+
+.player-card-slot:hover,
+.layout-player-token:hover,
+.center-card:hover {
+  --card-scale: 1.05;
+}
+
+.table-card:hover img,
+.layout-player-token:hover img,
+.center-card:hover img {
+  transform: none !important;
+}
+
+/* Allow center cards to receive hover/click through the player layout layers */
+#layoutEditorPlayers,
+#playerCardLayout {
+  pointer-events: none;
+  z-index: 2;
+}
+
+.layout-player-token,
+.player-card-slot {
+  pointer-events: auto;
+}
+
+.center-cards {
+  z-index: 1;
+}
+
+.center-card {
+  pointer-events: auto;
+  --card-scale: 1;
+  transform: scale(var(--card-scale));
+  transform-origin: center center;
+  transition: transform 0.2s ease;
+}
+
+.center-card:hover {
+  --card-scale: 1.05;
+}
+
+/* Keep old image-hover rules from fighting the new button-hover system */
+.center-card:hover img {
+  transform: none !important;
+}
+
+.table-board {
+  border-radius: 12px;
+}
+
+.table-viewport {
+  width: 100%;
+  max-width: 100%;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 18px;
+  margin: 16px auto;
+  border: 1px solid #333;
+  background: #101010;
+}
+
+.table-zoom-content {
+  position: relative;
+  width: 700px;
+  height: 360px;
+}
+
+.table-board {
+  transform-origin: top left;
+}
+
+.table-viewport.table-zoomist {
+  width: 100%;
+  max-width: 100%;
+  height: clamp(360px, 70vh, 620px);
+  overflow: hidden;
+  position: relative;
+
+  border-radius: 18px;
+  margin: 16px auto;
+  border: 1px solid #333;
+  background: #101010;
+}
+
+.table-zoomist .zoomist-wrapper {
+  width: 100%;
+  height: 100%;
+}
+
+.table-zoomist .zoomist-image {
+  width: max-content;
+  height: max-content;
+}
+
+.table-zoomist .table-board {
+  margin: 0;
+  max-width: none;
+}
+
+
+#layoutTableZoom {
+  touch-action: none;
+}
+
+#layoutTableZoom .zoomist-wrapper {
+  width: 100%;
+  height: 100%;
+}
+
+#layoutTableZoom .zoomist-image {
+  display: inline-block;
+  width: auto;
+  height: auto;
+  transform-origin: 0 0;
+}
+
+#layoutEditorBoard {
+  display: block;
+}

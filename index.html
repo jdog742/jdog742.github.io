@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <title>One Night Ultimate Werewolf</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/zoomist@2/zoomist.css" />
+  <script src="https://cdn.jsdelivr.net/npm/zoomist@2/zoomist.umd.js" defer></script>
+  
   <link rel="stylesheet" href="styles.css" />
   <script src="script.js" defer></script>
 </head>
@@ -35,8 +38,6 @@
         <li>Sam</li>
         <li>Dad</li>
         <li>Jack</li>
-        <li>Kate</li>
-        <li>Mom</li>
       </ul>
 
       <p id="numberofroles"></p>
@@ -130,46 +131,46 @@
   <section id="screen-table-layout" class="screen">
     <h2>Table Layout</h2>
 
-    <label for="tableShape">Table shape</label>
-    <select id="tableShape">
-      <option value="oval">Oval</option>
-      <option value="rectangle">Rectangle</option>
-      <option value="horseshoe">Horseshoe</option>
-    </select>
 
     <div class="table-size-controls">
       <label for="tableWidth">
-        Table width: <span id="tableWidthValue">100%</span>
+        Table width: <span id="tableWidthValue">460px</span>
       </label>
-      <input id="tableWidth" type="range" min="60" max="100" value="100">
+      <input id="tableWidth" type="range" min="400" max="1000" step="20" value="460">
 
       <label for="tableHeight">
-        Table height: <span id="tableHeightValue">420px</span>
+        Table height: <span id="tableHeightValue">360px</span>
       </label>
-      <input id="tableHeight" type="range" min="260" max="700" step="10" value="420">
+      <input id="tableHeight" type="range" min="300" max="600" step="20" value="300">
     </div>
 
     <p class="hint">Drag each card to match where each player is sitting.</p>
 
-    <div id="layoutEditorBoard" class="table-board layout-editor-board">
-      <div class="center-cards">
-        <button class="table-card center-card" type="button">
-          <span>Center 1</span>
-          <img src="CardBack.jpg" alt="Face-down center card">
-        </button>
+    <div id="layoutTableZoom" class="table-viewport table-zoomist zoomist-container">
+      <div class="zoomist-wrapper">
+        <div class="zoomist-image">
+          <div id="layoutEditorBoard" class="table-board layout-editor-board">
+            <div class="center-cards">
+              <button class="table-card center-card" type="button">
+                <span>Center 1</span>
+                <img src="CardBack.jpg" alt="Face-down center card">
+              </button>
 
-        <button class="table-card center-card" type="button">
-          <span>Center 2</span>
-          <img src="CardBack.jpg" alt="Face-down center card">
-        </button>
+              <button class="table-card center-card" type="button">
+                <span>Center 2</span>
+                <img src="CardBack.jpg" alt="Face-down center card">
+              </button>
 
-        <button class="table-card center-card" type="button">
-          <span>Center 3</span>
-          <img src="CardBack.jpg" alt="Face-down center card">
-        </button>
+              <button class="table-card center-card" type="button">
+                <span>Center 3</span>
+                <img src="CardBack.jpg" alt="Face-down center card">
+              </button>
+            </div>
+
+            <div id="layoutEditorPlayers"></div>
+          </div>
+        </div>
       </div>
-
-      <div id="layoutEditorPlayers"></div>
     </div>
 
     <button id="resetTableLayout">Reset Layout</button>
@@ -190,26 +191,28 @@
     
       <div class="table-area">
         <h3>Table</h3>
-    
-        <div class="table-board">
-          <div class="center-cards">
-            <button class="table-card center-card" data-slot="center1">
-              <span>Center 1</span>
-              <img src="CardBack.jpg" alt="Face-down center card">
-            </button>
-    
-            <button class="table-card center-card" data-slot="center2">
-              <span>Center 2</span>
-              <img src="CardBack.jpg" alt="Face-down center card">
-            </button>
-    
-            <button class="table-card center-card" data-slot="center3">
-              <span>Center 3</span>
-              <img src="CardBack.jpg" alt="Face-down center card">
-            </button>
+
+        <div class="table-viewport">
+          <div class="table-board">
+            <div class="center-cards">
+              <button class="table-card center-card" data-slot="center1">
+                <span>Center 1</span>
+                <img src="CardBack.jpg" alt="Face-down center card">
+              </button>
+      
+              <button class="table-card center-card" data-slot="center2">
+                <span>Center 2</span>
+                <img src="CardBack.jpg" alt="Face-down center card">
+              </button>
+      
+              <button class="table-card center-card" data-slot="center3">
+                <span>Center 3</span>
+                <img src="CardBack.jpg" alt="Face-down center card">
+              </button>
+            </div>
+      
+            <div id="playerCardLayout"></div>
           </div>
-    
-          <div id="playerCardLayout"></div>
         </div>
       </div>
     
