@@ -39,7 +39,8 @@ const TABLE_ZOOM_OPTIONS = {
   smooth: true,
   zoomer: true,
   slider: true,
-  wheelReleaseOnMinMax: true,
+  wheelReleaseOnMinMax: false,
+  dragReleaseOnBounds: false,
   disableDraggingClass: "zoomist-not-draggable"
 };
 
@@ -65,7 +66,7 @@ function updateTableZoom(selector) {
   const zoomist = document.querySelector(selector)?.zoomist;
 
   if (zoomist) {
-    zoomist.update();
+    zoomist.update(TABLE_ZOOM_OPTIONS);
   }
 }
 

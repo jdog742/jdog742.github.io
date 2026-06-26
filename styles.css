@@ -503,38 +503,51 @@
   background: #101010;
 }
 
-.table-zoomist .zoomist-wrapper {
-  width: 100%;
-  height: 100%;
+/* Black background everywhere in the zoom area */
+body,
+main,
+#screen-table-layout,
+#layoutTableZoom,
+#layoutTableZoom .zoomist-wrapper,
+#layoutTableZoom .zoomist-image,
+#layoutEditorBoard {
+  background: #000;
 }
 
-.table-zoomist .zoomist-image {
-  width: max-content;
-  height: max-content;
-}
-
-.table-zoomist .table-board {
-  margin: 0;
-  max-width: none;
-}
-
-
+/* Zoomist viewport */
 #layoutTableZoom {
+  width: 100%;
+  max-width: 100%;
+  height: clamp(360px, 70vh, 620px);
+  overflow: hidden;
+  position: relative;
   touch-action: none;
+
+  border-radius: 18px;
+  margin: 16px auto;
+  border: 1px solid #333;
 }
 
+/* Let Zoomist measure the actual board size */
 #layoutTableZoom .zoomist-wrapper {
   width: 100%;
   height: 100%;
 }
 
 #layoutTableZoom .zoomist-image {
-  display: inline-block;
-  width: auto;
-  height: auto;
-  transform-origin: 0 0;
+  display: block;
+  width: fit-content;
+  height: fit-content;
+
+  /*
+    Important:
+    Do NOT set transform-origin: 0 0 here.
+    Zoomist needs to manage the transform itself.
+  */
 }
 
 #layoutEditorBoard {
   display: block;
+  margin: 0;
+  max-width: none;
 }
