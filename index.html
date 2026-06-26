@@ -5,8 +5,9 @@
   <title>One Night Ultimate Werewolf</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="styles.css" />
+  <script src="script.js" defer></script>
 </head>
-<script src="script.js"></script>
+
 <body>
 
   <header>
@@ -29,13 +30,21 @@
         <li>Alice</li>
         <li>Bob</li>
         <li>Charlie</li>
+        <li>Rob</li>
+        <li>Tom</li>
+        <li>Sam</li>
+        <li>Dad</li>
+        <li>Jack</li>
+        <li>Kate</li>
+        <li>Mom</li>
       </ul>
 
       <p id="numberofroles"></p>
 
       <button data-next="screen-roles">Roles</button>
+      <button data-next="screen-table-layout">Table Layout</button>
       <button>Ready</button>
-      <button class="primary" data-next="screen-night">Start Game</button>
+      <button id="startGame" class="primary" data-next="screen-night">Start Game</button>
     </section>
 
     <!-- Roles -->
@@ -43,53 +52,73 @@
         <h2>Roles</h2>
 
         <label class="role">
-            <input type="checkbox" name="roles[]" value="Drunk" hidden>
+            <input type="checkbox" name="roles" value="Drunk" hidden>
             <img src="Drunk.jpg" alt="Role icon">
         </label>
 
         <label class="role">
-            <input type="checkbox" name="roles[]" value="Insomniac" hidden>
+            <input type="checkbox" name="roles" value="Insomniac" hidden>
             <img src="Insomniac.jpg" alt="Role icon">
         </label>
 
         <label class="role">
-            <input type="checkbox" name="roles[]" value="Mason" hidden>
+            <input type="checkbox" name="roles" value="Mason" hidden>
             <img src="Mason.jpg" alt="Role icon">
         </label>
 
         <label class="role">
-            <input type="checkbox" name="roles[]" value="Minion" hidden>
+          <input type="checkbox" name="roles" value="Mason" hidden>
+          <img src="Mason.jpg" alt="Role icon">
+        </label>
+
+        <label class="role">
+            <input type="checkbox" name="roles" value="Minion" hidden>
             <img src="Minion.jpg" alt="Role icon">
         </label>
 
         <label class="role">
-            <input type="checkbox" name="roles[]" value="Robber" hidden>
+            <input type="checkbox" name="roles" value="Robber" hidden>
             <img src="Robber.jpg" alt="Role icon">
         </label>
 
         <label class="role">
-            <input type="checkbox" name="roles[]" value="Seer" hidden>
+            <input type="checkbox" name="roles" value="Seer" hidden>
             <img src="Seer.jpg" alt="Role icon">
         </label>
 
         <label class="role">
-            <input type="checkbox" name="roles[]" value="Tanner" hidden>
+            <input type="checkbox" name="roles" value="Tanner" hidden>
             <img src="Tanner.jpg" alt="Role icon">
         </label>
 
         <label class="role">
-            <input type="checkbox" name="roles[]" value="Troublemaker" hidden>
+            <input type="checkbox" name="roles" value="Troublemaker" hidden>
             <img src="Troublemaker.jpg" alt="Role icon">
         </label>
 
         <label class="role">
-            <input type="checkbox" name="roles[]" value="villager" hidden>
+            <input type="checkbox" name="roles" value="Villager" hidden>
             <img src="Villager.jpg" alt="Role icon">
         </label>
 
         <label class="role">
-            <input type="checkbox" name="roles[]" value="Werewolf" hidden>
+          <input type="checkbox" name="roles" value="Villager" hidden>
+          <img src="Villager.jpg" alt="Role icon">
+        </label>
+
+        <label class="role">
+          <input type="checkbox" name="roles" value="Villager" hidden>
+          <img src="Villager.jpg" alt="Role icon">
+        </label>
+
+        <label class="role">
+            <input type="checkbox" name="roles" value="Werewolf" hidden>
             <img src="Werewolf.jpg" alt="Role icon">
+        </label>
+
+        <label class="role">
+          <input type="checkbox" name="roles" value="Werewolf" hidden>
+          <img src="Werewolf.jpg" alt="Role icon">
         </label>
 
         <button class="primary" data-next="screen-lobby">Back</button>
@@ -97,15 +126,93 @@
     </section>
 
 
+  <!-- TABLE LAYOUT -->
+  <section id="screen-table-layout" class="screen">
+    <h2>Table Layout</h2>
+
+    <label for="tableShape">Table shape</label>
+    <select id="tableShape">
+      <option value="oval">Oval</option>
+      <option value="rectangle">Rectangle</option>
+      <option value="horseshoe">Horseshoe</option>
+    </select>
+
+    <div class="table-size-controls">
+      <label for="tableWidth">
+        Table width: <span id="tableWidthValue">100%</span>
+      </label>
+      <input id="tableWidth" type="range" min="60" max="100" value="100">
+
+      <label for="tableHeight">
+        Table height: <span id="tableHeightValue">420px</span>
+      </label>
+      <input id="tableHeight" type="range" min="260" max="700" step="10" value="420">
+    </div>
+
+    <p class="hint">Drag each card to match where each player is sitting.</p>
+
+    <div id="layoutEditorBoard" class="table-board layout-editor-board">
+      <div class="center-cards">
+        <button class="table-card center-card" type="button">
+          <span>Center 1</span>
+          <img src="CardBack.jpg" alt="Face-down center card">
+        </button>
+
+        <button class="table-card center-card" type="button">
+          <span>Center 2</span>
+          <img src="CardBack.jpg" alt="Face-down center card">
+        </button>
+
+        <button class="table-card center-card" type="button">
+          <span>Center 3</span>
+          <img src="CardBack.jpg" alt="Face-down center card">
+        </button>
+      </div>
+
+      <div id="layoutEditorPlayers"></div>
+    </div>
+
+    <button id="resetTableLayout">Reset Layout</button>
+    <button id="saveTableLayout" class="primary" data-next="screen-lobby">Save Layout</button>
+    <button data-next="screen-lobby">Cancel</button>
+  </section>
+
+
     <!-- NIGHT -->
     <section id="screen-night" class="screen">
       <h2>Night Phase</h2>
-
+    
       <div class="card">
         <h3>Your Role</h3>
-        <p>Seer</p>
+        <img id="yourRoleImage" src="" alt="Your role card" class="your-role-card">
+        <p id="yourRoleName" style="display: none;">?</p>
       </div>
-
+    
+      <div class="table-area">
+        <h3>Table</h3>
+    
+        <div class="table-board">
+          <div class="center-cards">
+            <button class="table-card center-card" data-slot="center1">
+              <span>Center 1</span>
+              <img src="CardBack.jpg" alt="Face-down center card">
+            </button>
+    
+            <button class="table-card center-card" data-slot="center2">
+              <span>Center 2</span>
+              <img src="CardBack.jpg" alt="Face-down center card">
+            </button>
+    
+            <button class="table-card center-card" data-slot="center3">
+              <span>Center 3</span>
+              <img src="CardBack.jpg" alt="Face-down center card">
+            </button>
+          </div>
+    
+          <div id="playerCardLayout"></div>
+        </div>
+      </div>
+    
       <button class="primary" data-next="screen-discussion">Submit Action</button>
     </section>
 
