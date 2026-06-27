@@ -4,41 +4,29 @@
   <meta charset="UTF-8" />
   <title>One Night Ultimate Werewolf</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/zoomist@2/zoomist.css" />
-  <script src="https://cdn.jsdelivr.net/npm/zoomist@2/zoomist.umd.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.6.2/dist/panzoom.min.js" defer></script>
+  
+  <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js" defer></script>
   
   <link rel="stylesheet" href="styles.css" />
   <script src="script.js" defer></script>
-</head>
+  
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script></head>
 
 <body>
-
   <header>
     <h1>One Night Ultimate Werewolf</h1>
   </header>
 
   <main>
-
-    <!-- HOME -->
     <section id="screen-home" class="screen active">
         <button data-next="screen-lobby">Create Room</button>
         <button data-next="screen-lobby">Join Room</button>        
     </section>
 
-    <!-- LOBBY -->
     <section id="screen-lobby" class="screen">
       <h2>Lobby</h2>
-
-      <ul class="player-list">
-        <li>Alice</li>
-        <li>Bob</li>
-        <li>Charlie</li>
-        <li>Rob</li>
-        <li>Tom</li>
-        <li>Sam</li>
-        <li>Dad</li>
-        <li>Jack</li>
-      </ul>
+      <ul class="player-list" id="playerList"></ul>
 
       <p id="numberofroles"></p>
 
@@ -48,195 +36,116 @@
       <button id="startGame" class="primary" data-next="screen-night">Start Game</button>
     </section>
 
-    <!-- Roles -->
     <section id="screen-roles" class="screen">
         <h2>Roles</h2>
-
-        <label class="role">
-            <input type="checkbox" name="roles" value="Drunk" hidden>
-            <img src="Drunk.jpg" alt="Role icon">
-        </label>
-
-        <label class="role">
-            <input type="checkbox" name="roles" value="Insomniac" hidden>
-            <img src="Insomniac.jpg" alt="Role icon">
-        </label>
-
-        <label class="role">
-            <input type="checkbox" name="roles" value="Mason" hidden>
-            <img src="Mason.jpg" alt="Role icon">
-        </label>
-
-        <label class="role">
-          <input type="checkbox" name="roles" value="Mason" hidden>
-          <img src="Mason.jpg" alt="Role icon">
-        </label>
-
-        <label class="role">
-            <input type="checkbox" name="roles" value="Minion" hidden>
-            <img src="Minion.jpg" alt="Role icon">
-        </label>
-
-        <label class="role">
-            <input type="checkbox" name="roles" value="Robber" hidden>
-            <img src="Robber.jpg" alt="Role icon">
-        </label>
-
-        <label class="role">
-            <input type="checkbox" name="roles" value="Seer" hidden>
-            <img src="Seer.jpg" alt="Role icon">
-        </label>
-
-        <label class="role">
-            <input type="checkbox" name="roles" value="Tanner" hidden>
-            <img src="Tanner.jpg" alt="Role icon">
-        </label>
-
-        <label class="role">
-            <input type="checkbox" name="roles" value="Troublemaker" hidden>
-            <img src="Troublemaker.jpg" alt="Role icon">
-        </label>
-
-        <label class="role">
-            <input type="checkbox" name="roles" value="Villager" hidden>
-            <img src="Villager.jpg" alt="Role icon">
-        </label>
-
-        <label class="role">
-          <input type="checkbox" name="roles" value="Villager" hidden>
-          <img src="Villager.jpg" alt="Role icon">
-        </label>
-
-        <label class="role">
-          <input type="checkbox" name="roles" value="Villager" hidden>
-          <img src="Villager.jpg" alt="Role icon">
-        </label>
-
-        <label class="role">
-            <input type="checkbox" name="roles" value="Werewolf" hidden>
-            <img src="Werewolf.jpg" alt="Role icon">
-        </label>
-
-        <label class="role">
-          <input type="checkbox" name="roles" value="Werewolf" hidden>
-          <img src="Werewolf.jpg" alt="Role icon">
-        </label>
-
+        <div id="rolesContainer"></div>
         <button class="primary" data-next="screen-lobby">Back</button>
-
     </section>
 
+    <section id="screen-table-layout" class="screen" 
+             x-data="tableConfig()" 
+             x-init="$watch('width', () => saveAndZoom()); $watch('height', () => saveAndZoom())">
+      <h2>Table Layout</h2>
 
-  <!-- TABLE LAYOUT -->
-  <section id="screen-table-layout" class="screen">
-    <h2>Table Layout</h2>
+      <div class="table-size-controls">
+        <label>Table width: <span x-text="width + 'px'"></span></label>
+        <input type="range" min="400" max="1000" step="20" x-model.number="width">
 
+        <label>Table height: <span x-text="height + 'px'"></span></label>
+        <input type="range" min="300" max="600" step="20" x-model.number="height">
+      </div>
 
-    <div class="table-size-controls">
-      <label for="tableWidth">
-        Table width: <span id="tableWidthValue">460px</span>
-      </label>
-      <input id="tableWidth" type="range" min="400" max="1000" step="20" value="460">
+      <p class="hint">Drag each card to match where each player is sitting.</p>
 
-      <label for="tableHeight">
-        Table height: <span id="tableHeightValue">360px</span>
-      </label>
-      <input id="tableHeight" type="range" min="300" max="600" step="20" value="300">
-    </div>
-
-    <p class="hint">Drag each card to match where each player is sitting.</p>
-
-    <div id="layoutTableZoom" class="table-viewport table-zoomist zoomist-container">
-      <div class="zoomist-wrapper">
-        <div class="zoomist-image">
-          <div id="layoutEditorBoard" class="table-board layout-editor-board">
-            <div class="center-cards">
-              <button class="table-card center-card" type="button">
-                <span>Center 1</span>
-                <img src="CardBack.jpg" alt="Face-down center card">
-              </button>
-
-              <button class="table-card center-card" type="button">
-                <span>Center 2</span>
-                <img src="CardBack.jpg" alt="Face-down center card">
-              </button>
-
-              <button class="table-card center-card" type="button">
-                <span>Center 3</span>
-                <img src="CardBack.jpg" alt="Face-down center card">
-              </button>
-            </div>
-
-            <div id="layoutEditorPlayers"></div>
+      <div id="layoutTableZoom" class="table-viewport table-panzoom-viewport">
+        <button
+          id="toggleTableLock"
+          class="table-lock-button panzoom-exclude"
+          type="button"
+          aria-label="Lock table"
+          aria-pressed="false"
+        >🔓</button>
+      
+        <div id="layoutPanzoomContent" class="table-panzoom-content">          <div id="layoutEditorBoard" class="table-board layout-editor-board shape-rectangle" 
+               :style="`width: ${width}px; min-width: ${width}px; height: ${height}px;`">
+              <div class="center-cards">
+                <button class="table-card center-card" type="button">
+                  <span>Center 1</span>
+                  <img src="CardBack.jpg" alt="Face-down center card">
+                </button>
+                <button class="table-card center-card" type="button">
+                  <span>Center 2</span>
+                  <img src="CardBack.jpg" alt="Face-down center card">
+                </button>
+                <button class="table-card center-card" type="button">
+                  <span>Center 3</span>
+                  <img src="CardBack.jpg" alt="Face-down center card">
+                </button>
+              </div>
+              <div id="layoutEditorPlayers"></div>
           </div>
         </div>
       </div>
-    </div>
 
-    <button id="resetTableLayout">Reset Layout</button>
-    <button id="saveTableLayout" class="primary" data-next="screen-lobby">Save Layout</button>
-    <button data-next="screen-lobby">Cancel</button>
-  </section>
+      <button id="resetTableLayout">Reset Layout</button>
+      <button id="saveTableLayout" class="primary" data-next="screen-lobby">Save Layout</button>
+      <button data-next="screen-lobby">Cancel</button>
+    </section>
 
-
-    <!-- NIGHT -->
     <section id="screen-night" class="screen">
       <h2>Night Phase</h2>
-    
       <div class="card">
         <h3>Your Role</h3>
         <img id="yourRoleImage" src="" alt="Your role card" class="your-role-card">
         <p id="yourRoleName" style="display: none;">?</p>
       </div>
-    
       <div class="table-area">
         <h3>Table</h3>
-
-        <div class="table-viewport">
-          <div class="table-board">
-            <div class="center-cards">
-              <button class="table-card center-card" data-slot="center1">
-                <span>Center 1</span>
-                <img src="CardBack.jpg" alt="Face-down center card">
-              </button>
-      
-              <button class="table-card center-card" data-slot="center2">
-                <span>Center 2</span>
-                <img src="CardBack.jpg" alt="Face-down center card">
-              </button>
-      
-              <button class="table-card center-card" data-slot="center3">
-                <span>Center 3</span>
-                <img src="CardBack.jpg" alt="Face-down center card">
-              </button>
+        <div id="nightTableZoom" class="table-viewport table-panzoom-viewport">
+          <button
+            id="toggleNightTableLock"
+            class="table-lock-button panzoom-exclude"
+            type="button"
+            aria-label="Lock table"
+            aria-pressed="false"
+          >🔓</button>
+          <div id="nightPanzoomContent" class="table-panzoom-content">
+            <div class="table-board shape-rectangle" id="nightTableBoard">
+              <div class="center-cards">
+                <button class="table-card center-card" data-slot="center1">
+                  <span>Center 1</span>
+                  <img src="CardBack.jpg" alt="Face-down center card">
+                </button>
+                <button class="table-card center-card" data-slot="center2">
+                  <span>Center 2</span>
+                  <img src="CardBack.jpg" alt="Face-down center card">
+                </button>
+                <button class="table-card center-card" data-slot="center3">
+                  <span>Center 3</span>
+                  <img src="CardBack.jpg" alt="Face-down center card">
+                </button>
+              </div>
+        
+              <div id="playerCardLayout"></div>
             </div>
-      
-            <div id="playerCardLayout"></div>
           </div>
         </div>
       </div>
-    
       <button class="primary" data-next="screen-discussion">Submit Action</button>
     </section>
 
-    <!-- DISCUSSION -->
     <section id="screen-discussion" class="screen">
       <h2>Discussion</h2>
       <p class="timer">02:00</p>
-
-
       <div class="chat-box">
         <p><strong>Alice:</strong> I saw Bob.</p>
         <p><strong>Bob:</strong> I am not a werewolf.</p>
       </div>
-
       <button class="primary" data-next="screen-voting">Start Voting</button>
     </section>
 
-    <!-- VOTING -->
     <section id="screen-voting" class="screen">
       <h2>Vote</h2>
-
       <div class="vote-list">
         <button data-next="screen-reveal">Alice</button>
         <button data-next="screen-reveal">Bob</button>
@@ -244,15 +153,12 @@
       </div>
     </section>
 
-    <!-- REVEAL -->
     <section id="screen-reveal" class="screen">
       <h2>Results</h2>
       <p>Bob was a Werewolf 🐺</p>
-
       <button class="primary" data-next="screen-home">Play Again</button>
     </section>
 
   </main>
-
 </body>
 </html>
