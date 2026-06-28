@@ -5,13 +5,11 @@
   <title>One Night Ultimate Werewolf</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.6.2/dist/panzoom.min.js" defer></script>
-  
-  <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js" defer></script>
-  
+
   <link rel="stylesheet" href="styles.css" />
+  <script src="gamelogic.js" defer></script>
   <script src="script.js" defer></script>
-  
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script></head>
+</head>
 
 <body>
   <header>
@@ -21,7 +19,7 @@
   <main>
     <section id="screen-home" class="screen active">
         <button data-next="screen-lobby">Create Room</button>
-        <button data-next="screen-lobby">Join Room</button>        
+        <button data-next="screen-lobby">Join Room</button>
     </section>
 
     <section id="screen-lobby" class="screen">
@@ -42,17 +40,15 @@
         <button class="primary" data-next="screen-lobby">Back</button>
     </section>
 
-    <section id="screen-table-layout" class="screen" 
-             x-data="tableConfig()" 
-             x-init="$watch('width', () => saveAndZoom()); $watch('height', () => saveAndZoom())">
+    <section id="screen-table-layout" class="screen">
       <h2>Table Layout</h2>
 
       <div class="table-size-controls">
-        <label>Table width: <span x-text="width + 'px'"></span></label>
-        <input type="range" min="400" max="1000" step="20" x-model.number="width">
+        <label>Table width: <span id="tableWidthLabel"></span></label>
+        <input type="range" id="tableWidthInput" min="400" max="1000" step="20">
 
-        <label>Table height: <span x-text="height + 'px'"></span></label>
-        <input type="range" min="300" max="600" step="20" x-model.number="height">
+        <label>Table height: <span id="tableHeightLabel"></span></label>
+        <input type="range" id="tableHeightInput" min="300" max="600" step="20">
       </div>
 
       <p class="hint">Drag each card to match where each player is sitting.</p>
@@ -65,9 +61,9 @@
           aria-label="Lock table"
           aria-pressed="false"
         >🔓</button>
-      
-        <div id="layoutPanzoomContent" class="table-panzoom-content">          <div id="layoutEditorBoard" class="table-board layout-editor-board shape-rectangle" 
-               :style="`width: ${width}px; min-width: ${width}px; height: ${height}px;`">
+
+        <div id="layoutPanzoomContent" class="table-panzoom-content">
+          <div id="layoutEditorBoard" class="table-board layout-editor-board shape-rectangle">
               <div class="center-cards">
                 <button class="table-card center-card" type="button">
                   <span>Center 1</span>
@@ -99,6 +95,9 @@
         <img id="yourRoleImage" src="" alt="Your role card" class="your-role-card">
         <p id="yourRoleName" style="display: none;">?</p>
       </div>
+
+      <div id="nightActionContainer" class="card"></div>
+
       <div class="table-area">
         <h3>Table</h3>
         <div id="nightTableZoom" class="table-viewport table-panzoom-viewport">
@@ -125,21 +124,21 @@
                   <img src="CardBack.jpg" alt="Face-down center card">
                 </button>
               </div>
-        
+
               <div id="playerCardLayout"></div>
             </div>
           </div>
         </div>
       </div>
-      <button class="primary" data-next="screen-discussion">Submit Action</button>
+      <button id="submitNightAction" class="primary">Submit Action</button>
+      <button data-next="screen-discussion">Continue to Discussion</button>
     </section>
 
     <section id="screen-discussion" class="screen">
       <h2>Discussion</h2>
-      <p class="timer">02:00</p>
-      <div class="chat-box">
-        <p><strong>Alice:</strong> I saw Bob.</p>
-        <p><strong>Bob:</strong> I am not a werewolf.</p>
+      <p class="timer">05:00</p>
+      <div class="card">
+        <p>Discuss with the other players to figure out who the Werewolves are. When the timer runs out, it's time to vote on who to kill.</p>
       </div>
       <button class="primary" data-next="screen-voting">Start Voting</button>
     </section>

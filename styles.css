@@ -117,11 +117,9 @@ button.primary:hover { background: #4c6ef5; }
 .hint { color: #bbb; font-size: 14px; }
 
 
-/* Reset margins and positioning for the board */
+/* Table board */
 .table-board {
   position: relative;
-  /* Removed: margin: 0 auto; */
-  /* Removed: transform-origin: top left; */
   background: #181818;
   border: 2px solid #333;
   overflow: hidden;
@@ -129,30 +127,36 @@ button.primary:hover { background: #4c6ef5; }
 .table-board.shape-rectangle { border-radius: 12px; }
 
 .layout-editor-board {
-  touch-action: none; /* Let Zoomist / Interact handle touch */
+  touch-action: none; /* Let Panzoom / drag handle touch */
   background-image:
     linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
   background-size: 5% 5%;
+  margin: 0;
 }
 
 #layoutEditorPlayers, #playerCardLayout {
   position: absolute;
   inset: 0;
-  pointer-events: none; /* Let events pass to tokens */
+  pointer-events: none; /* Let events pass through to tokens */
   z-index: 2;
 }
 
 /* Cards & Tokens */
 .center-cards {
   position: absolute;
-  top: 50%; left: 50%;
-  display: flex; gap: 8px;
+  left: 50%;
+  top: 50%;
   transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  align-items: center;
+  justify-content: center;
   z-index: 1;
 }
 
-.table-card, .layout-player-token {
+.table-card {
   position: absolute;
   width: auto;
   padding: 4px;
@@ -164,6 +168,15 @@ button.primary:hover { background: #4c6ef5; }
   transform-origin: center center;
   transition: transform 0.2s ease, opacity 0.2s;
   pointer-events: auto; /* Catch clicks */
+}
+
+/* Must come after .table-card: takes the center cards out of absolute
+   positioning so .center-cards' flex layout can lay them out side by side. */
+.center-card {
+  position: relative;
+  left: auto;
+  top: auto;
+  transform: none;
 }
 
 .layout-player-token {
@@ -182,14 +195,14 @@ button.primary:hover { background: #4c6ef5; }
   z-index: 20;
 }
 
-.table-card span, .layout-player-token span {
+.table-card span {
   display: block;
   font-size: 12px;
   margin-bottom: 4px;
   white-space: nowrap;
 }
 
-.table-card img, .layout-player-token img {
+.table-card img {
   width: 54px;
   height: 78px;
   object-fit: cover;
@@ -199,28 +212,8 @@ button.primary:hover { background: #4c6ef5; }
 }
 
 /* Hover effects */
-.table-card:hover img, .layout-player-token:hover img {
+.table-card:hover img {
   transform: scale(1.05);
-}
-
-.center-cards {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-
-  display: flex;
-  flex-direction: row;
-  gap: 16px;
-  align-items: center;
-  justify-content: center;
-}
-
-.center-card {
-  position: relative;
-  left: auto;
-  top: auto;
-  transform: none;
 }
 
 body:has(.screen.active#screen-table-layout),
@@ -241,15 +234,6 @@ body:has(.screen.active#screen-table-layout),
   width: max-content;
   height: max-content;
   transform-origin: 0 0;
-  touch-action: none;
-}
-
-#layoutEditorBoard {
-  margin: 0;
-}
-
-.layout-player-token,
-.layout-player-token * {
   touch-action: none;
 }
 
@@ -291,4 +275,10 @@ body:has(.screen.active#screen-table-layout),
 body.table-locked .layout-player-token {
   cursor: default;
   opacity: 0.75;
+}
+
+.table-card.selected img {
+  border: 3px solid #5c7cfa;
+  box-shadow: 0 0 15px rgba(92, 124, 250, 0.8);
+  transform: scale(1.05);
 }
