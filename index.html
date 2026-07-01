@@ -92,8 +92,10 @@
       <h2>Night Phase</h2>
       <div class="card">
         <h3>Your Role</h3>
-        <img id="yourRoleImage" src="" alt="Your role card" class="your-role-card">
-        <p id="yourRoleName" style="display: none;">?</p>
+        <button id="yourRoleCard" class="your-role-card-button" type="button" aria-label="Tap to reveal your role">
+          <img id="yourRoleImage" src="" alt="Your role card" class="your-role-card">
+        </button>
+        <p id="yourRoleName" class="hint">Tap your card to reveal your role</p>
       </div>
 
       <div id="nightActionContainer" class="card"></div>
@@ -131,7 +133,40 @@
         </div>
       </div>
       <button id="submitNightAction" class="primary">Submit Action</button>
-      <button data-next="screen-discussion">Continue to Discussion</button>
+    </section>
+
+    <section id="screen-night-waiting" class="screen">
+      <h2>Night Phase</h2>
+      <div class="card">
+        <h3>Waiting on the rest of the table</h3>
+        <p id="waitingList" class="hint"></p>
+      </div>
+    </section>
+
+    <section id="screen-night-result" class="screen">
+      <h2>Night Result</h2>
+      <div id="nightResultSummary" class="card"></div>
+
+      <div class="table-area">
+        <h3>What You Saw</h3>
+        <div id="resultTableZoom" class="table-viewport table-panzoom-viewport">
+          <button
+            id="toggleResultTableLock"
+            class="table-lock-button panzoom-exclude"
+            type="button"
+            aria-label="Lock table"
+            aria-pressed="false"
+          >🔓</button>
+          <div id="resultPanzoomContent" class="table-panzoom-content">
+            <div class="table-board shape-rectangle" id="resultTableBoard">
+              <div class="center-cards" id="resultCenterCards"></div>
+              <div id="resultPlayerLayout"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="primary" data-next="screen-discussion">Continue to Discussion</button>
     </section>
 
     <section id="screen-discussion" class="screen">

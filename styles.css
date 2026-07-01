@@ -85,7 +85,20 @@ button.primary:hover { background: #4c6ef5; }
   display: none;
   margin: 12px auto;
   border-radius: 8px;
+  transition: transform 0.2s ease;
 }
+
+.your-role-card-button {
+  display: block;
+  width: auto;
+  padding: 0;
+  margin: 0 auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.your-role-card-button:hover { background: none; }
+.your-role-card-button:hover .your-role-card { transform: scale(1.03); }
 
 .chat-box {
   background: #1e1e1e;
@@ -135,7 +148,7 @@ button.primary:hover { background: #4c6ef5; }
   margin: 0;
 }
 
-#layoutEditorPlayers, #playerCardLayout {
+#layoutEditorPlayers, #playerCardLayout, #resultPlayerLayout {
   position: absolute;
   inset: 0;
   pointer-events: none; /* Let events pass through to tokens */
@@ -281,4 +294,40 @@ body.table-locked .layout-player-token {
   border: 3px solid #5c7cfa;
   box-shadow: 0 0 15px rgba(92, 124, 250, 0.8);
   transform: scale(1.05);
+}
+
+/* Result table: role you actually learned, shown face-up */
+.table-card.revealed img {
+  border: 3px solid #f5c542;
+  box-shadow: 0 0 15px rgba(245, 197, 66, 0.75);
+}
+
+/* Result table: seat involved in your action, but you never saw the role */
+.table-card.marked img {
+  border: 3px dashed #5c7cfa;
+  opacity: 0.85;
+}
+
+.table-card.marked::after {
+  content: "\21c4";
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  line-height: 1;
+  background: #5c7cfa;
+  color: #fff;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+/* Result table: marks your own seat so you can find yourself on the board */
+.table-card.self img {
+  outline: 2px solid rgba(255, 255, 255, 0.55);
+  outline-offset: 2px;
 }

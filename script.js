@@ -18,6 +18,9 @@ let savedTableLayout = loadJSON("tableLayout", null);
 let editingTableLayout = null;
 let tableInteractionLocked = false;
 let currentNightSelection = []; // Stores the data-slots of the cards tapped by the user
+let roleRevealed = false; // Whether currentPlayer has tapped their role card face-up
+let submittedPlayers = new Set(); // Players who have locked in their night action
+let waitingTimeoutId = null;
 
 // ---------------------------------------------------------------------------
 // Small storage helpers
@@ -141,6 +144,7 @@ function createTableZoom({ viewportId, contentId, boardId, lockButtonId, fitToVi
 
 let layoutZoom = null;
 let nightZoom = null;
+let resultZoom = null;
 
 function setTableInteractionLocked(locked) {
   tableInteractionLocked = locked;
@@ -191,20 +195,25 @@ function makeDraggable(el, onMove) {
 // ---------------------------------------------------------------------------
 // Shared player-card rendering (night board + layout editor)
 // ---------------------------------------------------------------------------
-function createPlayerCardElement(player, pos, { draggable }) {
+function createPlayerCardElement(player, pos, { draggable, revealRole, marked, isSelf } = {}) {
   const button = document.createElement("button");
   button.type = "button";
   button.dataset.slot = player;
   button.dataset.player = player;
-  button.className = draggable
-    ? "table-card layout-player-token panzoom-exclude"
-    : "table-card player-card-slot";
+
+  const classes = ["table-card", draggable ? "layout-player-token panzoom-exclude" : "player-card-slot"];
+  if (revealRole) classes.push("revealed");
+  if (marked) classes.push("marked");
+  if (isSelf) classes.push("self");
+  button.className = classes.join(" ");
 
   applyCardPosition(button, pos);
 
+  const imgSrc = revealRole ? `${revealRole}.jpg` : "CardBack.jpg";
+  const imgAlt = revealRole ? `${player}'s card: ${revealRole}` : `${player}'s card`;
   button.innerHTML = `
     <span>${player}</span>
-    <img src="CardBack.jpg" alt="${player}'s card">
+    <img src="${imgSrc}" alt="${imgAlt}">
   `;
 
   if (draggable) {
@@ -223,6 +232,27 @@ function createPlayerCardElement(player, pos, { draggable }) {
       applyCardPosition(button, pos);
     });
   }
+
+  return button;
+}
+
+/** Non-positioned counterpart to createPlayerCardElement for the three center slots. */
+function createCenterCardElement(slot, label, revealRole, marked) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.slot = slot;
+
+  const classes = ["table-card", "center-card"];
+  if (revealRole) classes.push("revealed");
+  if (marked) classes.push("marked");
+  button.className = classes.join(" ");
+
+  const imgSrc = revealRole ? `${revealRole}.jpg` : "CardBack.jpg";
+  const imgAlt = revealRole ? `${label} card: ${revealRole}` : `Face-down ${label.toLowerCase()} card`;
+  button.innerHTML = `
+    <span>${label}</span>
+    <img src="${imgSrc}" alt="${imgAlt}">
+  `;
 
   return button;
 }
@@ -265,21 +295,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Global Navigation Click Handler
   document.addEventListener("click", (event) => {
-    
-    // 1. Check for card taps during the night phase
+
+    // 1. Tap-to-reveal your own role card
+    if (event.target.closest("#yourRoleCard")) {
+      toggleRoleReveal();
+      return;
+    }
+
+    // 2. Check for card taps during the night phase
     const cardButton = event.target.closest(".table-card");
     if (cardButton && document.getElementById("screen-night").classList.contains("active") && !nightResult) {
         handleCardTapForAction(cardButton);
         return; // Stop processing further
     }
 
-    // 2. Check for the submit action button explicitly
+    // 3. Check for the submit action button explicitly
     if (event.target.id === "submitNightAction") {
         submitNightAction();
         return; // Execute and stop processing
     }
 
-    // 3. Handle all screen transitions
+    // 4. Handle all screen transitions
     const target = event.target.closest("[data-next]");
     if (!target) return;
 
@@ -392,6 +428,11 @@ let nightResult = null;
 
 function startNewGame() {
   currentNightSelection = [];
+  roleRevealed = false;
+  submittedPlayers = new Set();
+  if (waitingTimeoutId) clearTimeout(waitingTimeoutId);
+  waitingTimeoutId = null;
+
   const players = [...DEFAULT_PLAYERS];
   const selectedRoles = Array.from(document.querySelectorAll('input[name="roles"]:checked')).map(r => r.value);
 
@@ -402,33 +443,24 @@ function startNewGame() {
 
 /**
  * Renders the night-action picker (if currentPlayer's original role needs
- * one) and the "what did I see" panel (once the night has been resolved).
- * Call this once on entering screen-night, and again after resolveNight().
+ * one). Call this once on entering screen-night, and again each time a
+ * fresh game starts. The result of the night now lives on its own screen
+ * (see revealNightResult / screen-night-result) so this only ever renders
+ * the "still collecting actions" state.
  */
 function renderNightScreen() {
   if (!gameState) return;
 
   const myRole = gameState.originalRoles[currentPlayer];
   const actionContainer = document.getElementById("nightActionContainer");
-  const submitButton = document.getElementById("submitNightAction");
 
-  if (!nightResult) {
-    // Still collecting actions: show a picker for roles that need one,
-    // or a simple acknowledgement for roles that don't.
-    if (actionContainer) {
-      actionContainer.innerHTML = roleRequiresAction(myRole)
-        ? renderActionPicker(myRole)
-        : `<p class="hint">No action needed for ${myRole}. Wait for everyone else, then submit.</p>`;
-    }
-    if (submitButton) submitButton.disabled = false;
-    showYourRole(myRole); // show the role they woke up as, before anything resolves
-    return;
+  if (actionContainer) {
+    actionContainer.innerHTML = roleRequiresAction(myRole)
+      ? renderActionPicker(myRole)
+      : `<p class="hint">No action needed for ${myRole}. Wait for everyone else, then submit.</p>`;
   }
 
-  // Night has resolved: show this player's snapshot instead.
-  if (actionContainer) actionContainer.innerHTML = "";
-  if (submitButton) submitButton.disabled = true;
-  renderSnapshot(nightResult.snapshots[currentPlayer]);
+  showYourRole(myRole); // stash the role you woke up as; card stays face-down until tapped
 }
 
 function renderActionPicker(role) {
@@ -444,6 +476,12 @@ function handleCardTapForAction(card) {
   if (!roleRequiresAction(myRole)) return;
   const slot = card.dataset.slot;
 
+  // Helper function to safely deselect a card ONLY on the night board
+  const deselectCard = (s) => {
+    const el = document.querySelector(`#nightTableBoard [data-slot="${CSS.escape(s)}"]`);
+    if (el) el.classList.remove("selected");
+  };
+
   // Deselect if already selected
   if (currentNightSelection.includes(slot)) {
     currentNightSelection = currentNightSelection.filter(s => s !== slot);
@@ -455,35 +493,38 @@ function handleCardTapForAction(card) {
   if (myRole === "Seer") {
     const isCenter = slot.startsWith("center");
     if (isCenter) {
+      // Deselect any player cards first if switching to center cards
+      currentNightSelection.filter(s => !s.startsWith("center")).forEach(deselectCard);
       currentNightSelection = currentNightSelection.filter(s => s.startsWith("center"));
+      
       if (currentNightSelection.length >= 2) {
         const first = currentNightSelection.shift();
-        document.querySelector(`[data-slot="${first}"]`).classList.remove("selected");
+        deselectCard(first);
       }
       currentNightSelection.push(slot);
       card.classList.add("selected");
     } else {
       if (slot === currentPlayer) return;
-      currentNightSelection.forEach(s => document.querySelector(`[data-slot="${s}"]`)?.classList.remove("selected"));
+      currentNightSelection.forEach(deselectCard);
       currentNightSelection = [slot];
       card.classList.add("selected");
     }
   } else if (myRole === "Robber") {
     if (slot.startsWith("center") || slot === currentPlayer) return;
-    currentNightSelection.forEach(s => document.querySelector(`[data-slot="${s}"]`)?.classList.remove("selected"));
+    currentNightSelection.forEach(deselectCard);
     currentNightSelection = [slot];
     card.classList.add("selected");
   } else if (myRole === "Troublemaker") {
     if (slot.startsWith("center") || slot === currentPlayer) return;
     if (currentNightSelection.length >= 2) {
       const first = currentNightSelection.shift();
-      document.querySelector(`[data-slot="${first}"]`)?.classList.remove("selected");
+      deselectCard(first);
     }
     currentNightSelection.push(slot);
     card.classList.add("selected");
   } else if (myRole === "Drunk") {
     if (!slot.startsWith("center")) return;
-    currentNightSelection.forEach(s => document.querySelector(`[data-slot="${s}"]`)?.classList.remove("selected"));
+    currentNightSelection.forEach(deselectCard);
     currentNightSelection = [slot];
     card.classList.add("selected");
   }
@@ -514,34 +555,178 @@ function submitNightAction() {
   const myRole = gameState.originalRoles[currentPlayer];
   const action = collectActionFromSelection(myRole);
 
-  alert("Action captured: " + JSON.stringify(action));
   if (roleRequiresAction(myRole) && !action) {
     return alert("Make a valid choice by tapping cards before submitting.");
   }
 
   nightActions[currentPlayer] = action;
-  nightResult = resolveNight(gameState, nightActions);
-  
+  submittedPlayers.add(currentPlayer);
+
   // Clear visual selection
   document.querySelectorAll(".table-card.selected").forEach(el => el.classList.remove("selected"));
   currentNightSelection = [];
-  
-  renderNightScreen();
+
+  renderWaitingScreen();
+  goToScreen("screen-night-waiting");
+
+  // TODO: once real multiplayer exists, each player's submission will arrive
+  // over the network and this should call checkAllSubmitted() as each one
+  // comes in, instead of a timeout. For now there's only one real client,
+  // so simulate the rest of the table finishing shortly after.
+  waitingTimeoutId = setTimeout(() => {
+    gameState.players.forEach(p => submittedPlayers.add(p));
+    revealNightResult();
+  }, 1200);
 }
 
+/** Shows who the table is still waiting on before the night can resolve. */
+function renderWaitingScreen() {
+  const el = document.getElementById("waitingList");
+  if (!el || !gameState) return;
+
+  const stillWaiting = gameState.players.filter(p => !submittedPlayers.has(p));
+  el.textContent = stillWaiting.length
+    ? `Waiting on: ${stillWaiting.join(", ")}`
+    : "Everyone's in \u2014 resolving the night...";
+}
+
+/** Resolves the night and shows currentPlayer's result once everyone has submitted. */
+function revealNightResult() {
+  nightResult = resolveNight(gameState, nightActions);
+  renderSnapshot(nightResult.snapshots[currentPlayer], "nightResultSummary");
+  renderResultTable();
+  goToScreen("screen-night-result");
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      if (!resultZoom) {
+        resultZoom = createTableZoom({
+          viewportId: "resultTableZoom",
+          contentId: "resultPanzoomContent",
+          boardId: "resultTableBoard",
+          lockButtonId: "toggleResultTableLock",
+          fitToViewport: false
+        });
+      } else {
+        resultZoom.fit({ force: true });
+      }
+    });
+  });
+}
+
+/**
+ * Maps a snapshot (from gamelogic.js) to the seats it concerns, for drawing
+ * on the result table. Each entry is { slot, role }: `slot` is a player name
+ * or center slot, `role` is the role learned there, or null if the seat was
+ * part of the action but its role was never actually seen (e.g. a
+ * Troublemaker swap, or what the Robber gave away).
+ */
+function getSnapshotReveals(snapshot, player) {
+  switch (snapshot.type) {
+    case "werewolves":
+      return snapshot.players.map(p => ({ slot: p, role: "Werewolf" }));
+    case "masons":
+      return snapshot.players.map(p => ({ slot: p, role: "Mason" }));
+    case "seerPlayer":
+      return [{ slot: snapshot.target, role: snapshot.role }];
+    case "seerCenter":
+      return snapshot.targets.map((slot, i) => ({ slot, role: snapshot.roles[i] }));
+    case "robbed":
+      return [
+        { slot: player, role: snapshot.newRole },
+        { slot: snapshot.target, role: null },
+      ];
+    case "swapped":
+      return snapshot.players.map(slot => ({ slot, role: null }));
+    case "drunkSwapped":
+      return [
+        { slot: player, role: null },
+        { slot: snapshot.center, role: null },
+      ];
+    case "yourCurrentRole":
+    case "noAction":
+      return [{ slot: player, role: snapshot.role }];
+    default:
+      return []; // seerNoAction, troublemakerNoAction: nothing to show
+  }
+}
+
+/** Draws the table for the result screen: revealed roles face-up, swapped-but-unseen seats marked. */
+function renderResultTable() {
+  const board = document.getElementById("resultTableBoard");
+  const centerLayer = document.getElementById("resultCenterCards");
+  const playerLayer = document.getElementById("resultPlayerLayout");
+  if (!board || !centerLayer || !playerLayer || !gameState || !nightResult) return;
+
+  const size = getTableSize();
+  board.style.width = `${size.width}px`;
+  board.style.height = `${size.height}px`;
+
+  const reveals = getSnapshotReveals(nightResult.snapshots[currentPlayer], currentPlayer);
+  const revealMap = {};
+  reveals.forEach(({ slot, role }) => { revealMap[slot] = role; });
+
+  centerLayer.innerHTML = "";
+  CENTER_SLOTS.forEach((slot, i) => {
+    const known = Object.prototype.hasOwnProperty.call(revealMap, slot);
+    centerLayer.appendChild(
+      createCenterCardElement(slot, `Center ${i + 1}`, revealMap[slot] || null, known && !revealMap[slot])
+    );
+  });
+
+  playerLayer.innerHTML = "";
+  const positionMap = getCurrentPositionMap(gameState.players);
+  gameState.players.forEach(player => {
+    const known = Object.prototype.hasOwnProperty.call(revealMap, player);
+    playerLayer.appendChild(
+      createPlayerCardElement(player, positionMap[player], {
+        draggable: false,
+        revealRole: revealMap[player] || null,
+        marked: known && !revealMap[player],
+        isSelf: player === currentPlayer,
+      })
+    );
+  });
+}
+
+function goToScreen(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id)?.classList.add("active");
+}
+
+/** Stashes currentPlayer's role on the card and renders whichever face (back or front) is currently active. */
 function showYourRole(role) {
   const img = document.getElementById("yourRoleImage");
+  if (!img || !role) return;
+  img.dataset.role = role;
+  img.style.display = "block";
+  renderRoleCardFace();
+}
+
+/** Draws the role card face-down (CardBack) or face-up depending on roleRevealed. */
+function renderRoleCardFace() {
+  const img = document.getElementById("yourRoleImage");
   const nameEl = document.getElementById("yourRoleName");
-  if (img && role) {
-    img.src = `${role}.jpg`;
-    img.style.display = "block";
-  }
-  if (nameEl) nameEl.textContent = role;
+  const button = document.getElementById("yourRoleCard");
+  if (!img) return;
+
+  const role = img.dataset.role;
+  img.src = roleRevealed ? `${role}.jpg` : "CardBack.jpg";
+  img.alt = roleRevealed ? `${role} card` : "Face-down role card";
+
+  if (nameEl) nameEl.textContent = roleRevealed ? role : "Tap your card to reveal your role";
+  if (button) button.setAttribute("aria-label", roleRevealed ? "Tap to hide your role" : "Tap to reveal your role");
+}
+
+function toggleRoleReveal() {
+  roleRevealed = !roleRevealed;
+  renderRoleCardFace();
 }
 
 /** Renders the per-role "what did I learn" snapshot from gamelogic.js. */
-function renderSnapshot(snapshot) {
-  const panel = document.getElementById("nightActionContainer");
+/** Renders the per-role "what did I learn" snapshot from gamelogic.js. */
+function renderSnapshot(snapshot, containerId = "nightResultSummary") {
+  const panel = document.getElementById(containerId);
   if (!panel || !snapshot) return;
 
   const lines = {
@@ -565,7 +750,14 @@ function renderSnapshot(snapshot) {
     noAction: () => `You have no night action. Your role: ${snapshot.role}`,
   };
 
-  panel.innerHTML = `<p>${(lines[snapshot.type] || (() => ""))()}</p>`;
+  // The warning notice shown to players after the night resolves
+  const swapNotice = `
+    <p class="hint" style="margin-top: 12px; color: #f5c542;">
+      <em>Note: Depending on the actions of other players, you may no longer be the card that you see here!</em>
+    </p>
+  `;
+
+  panel.innerHTML = `<p>${(lines[snapshot.type] || (() => ""))()}</p>` + swapNotice;
 }
 
 // ---------------------------------------------------------------------------
